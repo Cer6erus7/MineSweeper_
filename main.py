@@ -4,7 +4,7 @@ from random import shuffle
 
 class MyButton(tk.Button):
 
-    def __init__(self, master, x, y, number, *args, **kwargs):
+    def __init__(self, master, x, y, number=0, *args, **kwargs):
         super(MyButton, self).__init__(master, width=0, font='Colibri 15 bold', *args, **kwargs)
         self.x = x
         self.y = y
@@ -19,33 +19,37 @@ class MineSweeper:
     ROW = 10
     COLUMN = 10
     MINES = 20
+
     window = tk.Tk()
     image = tk.PhotoImage(file="img.png")
     window.iconphoto(True, image)
     window.geometry("+500+100")
-    for row in range(ROW):
+    for row in range(ROW + 2):
         window.grid_rowconfigure(row, minsize=50)
-    for column in range(COLUMN):
+    for column in range(COLUMN + 2):
         window.grid_columnconfigure(column, minsize=50)
 
     def __init__(self):
         self.buttons = []
         self.field = tk.StringVar()
 
-        count = 1
-        for i in range(MineSweeper.ROW):
+        for i in range(MineSweeper.ROW + 2):
             temp = []
-            for j in range(MineSweeper.COLUMN):
-                btn = MyButton(MineSweeper.window, x=i, y=j, number=count)
+            for j in range(MineSweeper.COLUMN + 2):
+                btn = MyButton(MineSweeper.window, x=i, y=j)
                 btn.config(command=lambda button=btn: self.click(button))
                 temp.append(btn)
-                count += 1
             self.buttons.append(temp)
 
     def create_widgets(self):
         for row, i in enumerate(self.buttons):
             for column, j in enumerate(i):
                 j.grid(row=row, column=column, stick="wens")
+
+    def open_all_buttons(self):
+        for row, i in enumerate(self.buttons):
+            for column, j in enumerate(i):
+                self.click(j)
 
     def print_widgets(self):
         for row_btn in self.buttons:
@@ -60,10 +64,14 @@ class MineSweeper:
     def insert_mines(self):
         indxes_mines = self.get_mines_places()
         print(indxes_mines)
-        for row_btn in self.buttons:
-            for btn in row_btn:
+        count = 1    
+        for row in range(1, MineSweeper.ROW + 1):
+            for column in range(1, MineSweeper.COLUMN + 1):
+                btn = self.buttons[row][column]
+                btn.number = count
                 if btn.number in indxes_mines:
                     btn.is_mine = True
+                count += 1
 
     @staticmethod
     def click(clicked_button: MyButton):
@@ -78,6 +86,7 @@ class MineSweeper:
         self.create_widgets()
         self.insert_mines()
         self.print_widgets()
+        self.open_all_buttons()
         MineSweeper.window.mainloop()
 
 
