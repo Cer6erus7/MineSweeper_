@@ -10,6 +10,7 @@ class MyButton(tk.Button):
         self.y = y
         self.number = number
         self.is_mine = False
+        self.count_mine = 0
 
     def __repr__(self):
         return f"{self.x} {self.y} {self.is_mine} {self.number}"
@@ -17,16 +18,16 @@ class MyButton(tk.Button):
 
 class MineSweeper:
     ROW = 10
-    COLUMN = 10
-    MINES = 20
+    COLUMN = 5
+    MINES = 25
 
     window = tk.Tk()
     image = tk.PhotoImage(file="img.png")
     window.iconphoto(True, image)
     window.geometry("+500+100")
-    for row in range(ROW + 2):
+    for row in range(1, ROW + 1):
         window.grid_rowconfigure(row, minsize=50)
-    for column in range(COLUMN + 2):
+    for column in range(1, COLUMN + 1):
         window.grid_columnconfigure(column, minsize=50)
 
     def __init__(self):
@@ -42,9 +43,10 @@ class MineSweeper:
             self.buttons.append(temp)
 
     def create_widgets(self):
-        for row, i in enumerate(self.buttons):
-            for column, j in enumerate(i):
-                j.grid(row=row, column=column, stick="wens")
+        for row in range(1, MineSweeper.ROW + 1):
+            for column in range(1, MineSweeper.COLUMN + 1):
+                btn = self.buttons[row][column]
+                btn.grid(row=row, column=column, stick="wens")
 
     def open_all_buttons(self):
         for row, i in enumerate(self.buttons):
@@ -64,7 +66,7 @@ class MineSweeper:
     def insert_mines(self):
         indxes_mines = self.get_mines_places()
         print(indxes_mines)
-        count = 1    
+        count = 1
         for row in range(1, MineSweeper.ROW + 1):
             for column in range(1, MineSweeper.COLUMN + 1):
                 btn = self.buttons[row][column]
@@ -73,18 +75,32 @@ class MineSweeper:
                     btn.is_mine = True
                 count += 1
 
+    def count_mines_in_ceil(self):
+        for row in range(1, MineSweeper.ROW + 1):
+            for column in range(1, MineSweeper.COLUMN + 1):
+                btn = self.buttons[row][column]
+                mines = 0
+                if btn.is_mine is False:
+                    for row_dx in [-1, 0, 1]:
+                        for col_dx in [-1, 0, 1]:
+                            neighbour = self.buttons[row+row_dx][column+col_dx]
+                            if neighbour.is_mine:
+                                mines += 1
+                btn.count_mine = mines
+
     @staticmethod
     def click(clicked_button: MyButton):
         print(clicked_button)
         if clicked_button.is_mine:
             clicked_button.config(text="*", disabledforeground='black')
         else:
-            clicked_button.config(text=clicked_button.number, disabledforeground='black')
+            clicked_button.config(text=clicked_button.count_mine, disabledforeground='black')
         clicked_button.config(state=tk.DISABLED)
 
     def start(self):
         self.create_widgets()
         self.insert_mines()
+        self.count_mines_in_ceil()
         self.print_widgets()
         self.open_all_buttons()
         MineSweeper.window.mainloop()
