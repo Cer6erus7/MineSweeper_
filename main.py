@@ -3,7 +3,9 @@ from random import shuffle
 
 
 class MyButton(tk.Button):
-
+    """
+    Inheritance of Tkinter's Button. Made coordination for buttons, mines and indexes!
+    """
     def __init__(self, master, x, y, number=0, *args, **kwargs):
         super(MyButton, self).__init__(master, width=0, font='Colibri 15 bold', *args, **kwargs)
         self.x = x
@@ -17,22 +19,30 @@ class MyButton(tk.Button):
 
 
 class MineSweeper:
+    """
+    This class represent the game MineSweeper. Every method and logic was encapsulated in this class.
+    It has several static variable: ROW, COLUMN and MINES. This class create a new tkinter window.
+    """
     ROW = 10
-    COLUMN = 5
-    MINES = 25
+    COLUMN = 10
+    MINES = 17
 
     window = tk.Tk()
     image = tk.PhotoImage(file="img.png")
     window.iconphoto(True, image)
     window.geometry("+500+100")
+    window.title("MineSweeper")
     for row in range(1, ROW + 1):
         window.grid_rowconfigure(row, minsize=50)
     for column in range(1, COLUMN + 1):
         window.grid_columnconfigure(column, minsize=50)
 
     def __init__(self):
+        """
+        Instance of class create the buttons that
+        were specified in the static variable: ROW, COLUMN and MINES.
+        """
         self.buttons = []
-        self.field = tk.StringVar()
 
         for i in range(MineSweeper.ROW + 2):
             temp = []
@@ -43,27 +53,47 @@ class MineSweeper:
             self.buttons.append(temp)
 
     def create_widgets(self):
+        """
+        Arranges buttons on the window of the game.
+        :return: None
+        """
         for row in range(1, MineSweeper.ROW + 1):
             for column in range(1, MineSweeper.COLUMN + 1):
                 btn = self.buttons[row][column]
                 btn.grid(row=row, column=column, stick="wens")
 
-    def open_all_buttons(self):
+    def _open_all_buttons(self):
+        """
+        Opens every button on the window. Use only for testing.
+        :return: None
+        """
         for row, i in enumerate(self.buttons):
             for column, j in enumerate(i):
                 self.click(j)
 
     def print_widgets(self):
+        """
+        Print all info about every button on the window.
+        :return: None
+        """
         for row_btn in self.buttons:
             print(row_btn)
 
     @staticmethod
     def get_mines_places():
+        """
+        Static method. Choose the location of mines by using button's indexes.
+        :return: indexes of mines
+        """
         indexes = list(range(1, MineSweeper.ROW * MineSweeper.COLUMN + 1))
         shuffle(indexes)
         return indexes[:MineSweeper.MINES]
 
     def insert_mines(self):
+        """
+        Places mines on the field by using Static method 'get_mines_places'.
+        :return: None
+        """
         indxes_mines = self.get_mines_places()
         print(indxes_mines)
         count = 1
@@ -76,6 +106,10 @@ class MineSweeper:
                 count += 1
 
     def count_mines_in_ceil(self):
+        """
+        Count every mine that was placed beside of the button.
+        :return: None
+        """
         for row in range(1, MineSweeper.ROW + 1):
             for column in range(1, MineSweeper.COLUMN + 1):
                 btn = self.buttons[row][column]
@@ -90,6 +124,12 @@ class MineSweeper:
 
     @staticmethod
     def click(clicked_button: MyButton):
+        """
+        Static method. It is a logic for the buttons, that they should show when was clicked
+        (Mines or number of mines beside the ceil)
+        :param clicked_button:
+        :return: None
+        """
         print(clicked_button)
         if clicked_button.is_mine:
             clicked_button.config(text="*", disabledforeground='black')
@@ -98,11 +138,15 @@ class MineSweeper:
         clicked_button.config(state=tk.DISABLED)
 
     def start(self):
+        """
+        Start the game. Every required method was encapsulated in one method!
+        :return: None
+        """
         self.create_widgets()
         self.insert_mines()
         self.count_mines_in_ceil()
         self.print_widgets()
-        self.open_all_buttons()
+        # self._open_all_buttons()
         MineSweeper.window.mainloop()
 
 
