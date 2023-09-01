@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 from random import shuffle
 
 
@@ -13,6 +14,7 @@ class MyButton(tk.Button):
         self.number = number
         self.is_mine = False
         self.count_mine = 0
+        self.is_open = False
 
     def __repr__(self):
         return f"{self.x} {self.y} {self.is_mine} {self.number}"
@@ -25,7 +27,7 @@ class MineSweeper:
     """
     ROW = 10
     COLUMN = 10
-    MINES = 17
+    MINES = 10
 
     window = tk.Tk()
     image = tk.PhotoImage(file="img.png")
@@ -71,13 +73,23 @@ class MineSweeper:
             for column, j in enumerate(i):
                 self.click(j)
 
+    @staticmethod
+    def _lose_message():
+        return messagebox.showerror(message="You lost!")
+
     def print_widgets(self):
         """
         Print all info about every button on the window.
         :return: None
         """
-        for row_btn in self.buttons:
-            print(row_btn)
+        for row in range(1, MineSweeper.ROW + 1):
+            for column in range(1, MineSweeper.COLUMN + 1):
+                btn = self.buttons[row][column]
+                if btn.is_mine:
+                    print("*", end='')
+                else:
+                    print(btn.count_mine, end='')
+            print()
 
     @staticmethod
     def get_mines_places():
@@ -122,20 +134,57 @@ class MineSweeper:
                                 mines += 1
                 btn.count_mine = mines
 
-    @staticmethod
-    def click(clicked_button: MyButton):
+    def click(self, clicked_button: MyButton):
         """
         Static method. It is a logic for the buttons, that they should show when was clicked
-        (Mines or number of mines beside the ceil)
+        (Mines or number of mines beside the ceil), and made color for them
         :param clicked_button:
         :return: None
         """
+        colors = {1: "orange", 2: 'yellow', 3: 'green', 4: 'blue', 5: 'purple', 6: "red", 7: 'pink'}
         print(clicked_button)
         if clicked_button.is_mine:
             clicked_button.config(text="*", disabledforeground='black')
+            clicked_button.is_open = True
+            MineSweeper._lose_message()
+        elif clicked_button.count_mine != 0:
+            clicked_button.config(text=clicked_button.count_mine, disabledforeground=colors[clicked_button.count_mine])
+            clicked_button.is_open = True
         else:
-            clicked_button.config(text=clicked_button.count_mine, disabledforeground='black')
+            self.breadth_first_search(clicked_button, colors)
         clicked_button.config(state=tk.DISABLED)
+
+    def breadth_first_search(self, btn: MyButton, colors):
+        """
+        It's width search algorithm that opens every button that doesn't have mine. Take nearbiest button
+        that leis on south, west, norths, east to the queue, stops only nearby ceil that have "count of mine"
+        more than 0 and still opens them. Method repeats it until the queue won't be empty.
+        :param btn:
+        :param colors:
+        :return:
+        """
+        queue = [btn]
+        while queue:
+
+            cur_btn = queue.pop()
+            if cur_btn.count_mine:
+                cur_btn.config(text=cur_btn.count_mine, disabledforeground=colors[cur_btn.count_mine])
+            else:
+                cur_btn.config(text="")
+            cur_btn.is_open = True
+            cur_btn.config(state=tk.DISABLED)
+
+            if cur_btn.count_mine == 0:
+                x, y = cur_btn.x, cur_btn.y
+
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        if abs(dx-dy) != 1:
+                            continue
+
+                        next_btn = self.buttons[x+dx][y+dy]
+                        if not next_btn.is_open and 1 <= next_btn.x <= MineSweeper.ROW and 1 <= next_btn.y <= MineSweeper.COLUMN and next_btn not in queue:
+                            queue.append(next_btn)
 
     def start(self):
         """
