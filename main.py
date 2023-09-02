@@ -27,7 +27,7 @@ class MineSweeper:
     """
     ROW = 10
     COLUMN = 10
-    MINES = 10
+    MINES = 15
     IS_FIRST_CLICK = True
     IS_GAME_OVER = False
 
@@ -35,12 +35,7 @@ class MineSweeper:
     image = tk.PhotoImage(file="img.png")
     window.resizable(False, False)
     window.iconphoto(True, image)
-    window.geometry("+500+100")
     window.title("MineSweeper")
-    for row in range(1, ROW + 1):
-        window.grid_rowconfigure(row, minsize=50)
-    for column in range(1, COLUMN + 1):
-        window.grid_columnconfigure(column, minsize=50)
 
     def __init__(self):
         """
@@ -48,6 +43,7 @@ class MineSweeper:
         were specified in the static variable: ROW, COLUMN and MINES.
         """
         self.buttons = []
+        MineSweeper.window.geometry(f"{MineSweeper.COLUMN * 50}x{MineSweeper.ROW * 50}+500+100")
 
         for i in range(MineSweeper.ROW + 2):
             temp = []
@@ -56,6 +52,42 @@ class MineSweeper:
                 btn.config(command=lambda button=btn: self.click(button))
                 temp.append(btn)
             self.buttons.append(temp)
+
+    def create_settings_win(self):
+        win_settings = tk.Toplevel(self.window)
+        win_settings.wm_title("Settings")
+        win_settings.geometry("+635+300")
+
+        row_var = tk.IntVar()
+        column_var = tk.IntVar()
+        mine_var = tk.IntVar()
+
+        row_entry = tk.Entry(win_settings, textvariable=row_var)
+        row_entry.delete(0, tk.END)
+        row_entry.insert(0, MineSweeper.ROW)
+        row_entry.grid(row=0, column=1, padx=20, pady=10)
+        tk.Label(win_settings, text="Row").grid(row=0, column=0)
+
+        column_entry = tk.Entry(win_settings, textvariable=column_var)
+        column_entry.delete(0, tk.END)
+        column_entry.insert(0, MineSweeper.COLUMN)
+        column_entry.grid(row=1, column=1, padx=20, pady=10)
+        tk.Label(win_settings, text="Column").grid(row=1, column=0)
+
+        mine_entry = tk.Entry(win_settings, textvariable=mine_var)
+        mine_entry.delete(0, tk.END)
+        mine_entry.insert(0, MineSweeper.MINES)
+        mine_entry.grid(row=2, column=1, padx=20, pady=10)
+        tk.Label(win_settings, text="Mine").grid(row=2, column=0)
+
+        def ok_button():
+            MineSweeper.ROW = int(row_var.get())
+            MineSweeper.COLUMN = int(column_var.get())
+            MineSweeper.MINES = int(mine_var.get())
+            self.new_game()
+
+        ok_btn = tk.Button(win_settings, text="OK", command=ok_button)
+        ok_btn.grid(row=3, columnspan=2, pady=10)
 
     def create_widgets(self):
         """
@@ -68,7 +100,7 @@ class MineSweeper:
 
         settings_menu = tk.Menu(menubar)
         settings_menu.add_command(label="Restart", command=self.new_game)
-        settings_menu.add_command(label="Settings")
+        settings_menu.add_command(label="Settings", command=self.create_settings_win)
         settings_menu.add_command(label="Exit", command=self.window.destroy)
         menubar.add_cascade(label="File", menu=settings_menu)
 
@@ -79,6 +111,12 @@ class MineSweeper:
                 btn.number = count
                 btn.grid(row=row, column=column, stick="wens")
                 count += 1
+
+        for row in range(1, MineSweeper.ROW + 1):
+            MineSweeper.window.grid_rowconfigure(row, minsize=50)
+
+        for column in range(1, MineSweeper.COLUMN + 1):
+            MineSweeper.window.grid_columnconfigure(column, minsize=50)
 
     def _open_all_buttons(self):
         """
@@ -230,7 +268,7 @@ class MineSweeper:
         """
         self.create_widgets()
         # self._open_all_buttons()
-        MineSweeper.window.mainloop()
+        self.window.mainloop()
 
 
 if __name__ == "__main__":
