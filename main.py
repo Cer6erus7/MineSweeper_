@@ -33,6 +33,7 @@ class MineSweeper:
 
     window = tk.Tk()
     image = tk.PhotoImage(file="img.png")
+    window.resizable(False, False)
     window.iconphoto(True, image)
     window.geometry("+500+100")
     window.title("MineSweeper")
@@ -66,7 +67,7 @@ class MineSweeper:
         self.window.config(menu=menubar)
 
         settings_menu = tk.Menu(menubar)
-        settings_menu.add_command(label="Restart")
+        settings_menu.add_command(label="Restart", command=self.new_game)
         settings_menu.add_command(label="Settings")
         settings_menu.add_command(label="Exit", command=self.window.destroy)
         menubar.add_cascade(label="File", menu=settings_menu)
@@ -211,11 +212,16 @@ class MineSweeper:
                         if not next_btn.is_open and 1 <= next_btn.x <= MineSweeper.ROW and 1 <= next_btn.y <= MineSweeper.COLUMN and next_btn not in queue:
                             queue.append(next_btn)
 
-    # def new_game(self):
-    #     self.buttons.clear()
-    #     MineSweeper.IS_FIRST_CLICK = True
-    #     MineSweeper.IS_GAME_OVER = False
-    #     self.start()
+    def new_game(self):
+        """
+        Delete everything from the class and recreate everything to start a new game
+        :return:
+        """
+        [child.destroy() for child in self.window.winfo_children()]
+        MineSweeper.IS_FIRST_CLICK = True
+        MineSweeper.IS_GAME_OVER = False
+        self.__init__()
+        self.create_widgets()
 
     def start(self):
         """
