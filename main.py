@@ -28,6 +28,8 @@ class MineSweeper:
     ROW = 10
     COLUMN = 10
     MINES = 10
+    IS_FIRST_CLICK = True
+    IS_GAME_OVER = False
 
     window = tk.Tk()
     image = tk.PhotoImage(file="img.png")
@@ -56,13 +58,26 @@ class MineSweeper:
 
     def create_widgets(self):
         """
-        Arranges buttons on the window of the game.
+        Arranges buttons and menubar on the window of the game.
         :return: None
         """
+
+        menubar = tk.Menu(self.window)
+        self.window.config(menu=menubar)
+
+        settings_menu = tk.Menu(menubar)
+        settings_menu.add_command(label="Restart")
+        settings_menu.add_command(label="Settings")
+        settings_menu.add_command(label="Exit", command=self.window.destroy)
+        menubar.add_cascade(label="File", menu=settings_menu)
+
+        count = 1
         for row in range(1, MineSweeper.ROW + 1):
             for column in range(1, MineSweeper.COLUMN + 1):
                 btn = self.buttons[row][column]
+                btn.number = count
                 btn.grid(row=row, column=column, stick="wens")
+                count += 1
 
     def _open_all_buttons(self):
         """
@@ -72,10 +87,6 @@ class MineSweeper:
         for row, i in enumerate(self.buttons):
             for column, j in enumerate(i):
                 self.click(j)
-
-    @staticmethod
-    def _lose_message():
-        return messagebox.showerror(message="You lost!")
 
     def print_widgets(self):
         """
@@ -92,30 +103,28 @@ class MineSweeper:
             print()
 
     @staticmethod
-    def get_mines_places():
+    def get_mines_places(excluded_number: int):
         """
         Static method. Choose the location of mines by using button's indexes.
         :return: indexes of mines
         """
         indexes = list(range(1, MineSweeper.ROW * MineSweeper.COLUMN + 1))
+        indexes.remove(excluded_number)
         shuffle(indexes)
         return indexes[:MineSweeper.MINES]
 
-    def insert_mines(self):
+    def insert_mines(self, number: int):
         """
         Places mines on the field by using Static method 'get_mines_places'.
         :return: None
         """
-        indxes_mines = self.get_mines_places()
+        indxes_mines = self.get_mines_places(number)
         print(indxes_mines)
-        count = 1
         for row in range(1, MineSweeper.ROW + 1):
             for column in range(1, MineSweeper.COLUMN + 1):
                 btn = self.buttons[row][column]
-                btn.number = count
                 if btn.number in indxes_mines:
                     btn.is_mine = True
-                count += 1
 
     def count_mines_in_ceil(self):
         """
@@ -136,17 +145,35 @@ class MineSweeper:
 
     def click(self, clicked_button: MyButton):
         """
-        Static method. It is a logic for the buttons, that they should show when was clicked
-        (Mines or number of mines beside the ceil), and made color for them
+        It is a logic for the buttons, that they should show when was clicked
+        (Mines or number of mines beside the ceil), and made color for them.
+        Show every mine on the field after losing the game.
         :param clicked_button:
         :return: None
         """
         colors = {1: "orange", 2: 'yellow', 3: 'green', 4: 'blue', 5: 'purple', 6: "red", 7: 'pink'}
-        print(clicked_button)
+
+        if MineSweeper.IS_GAME_OVER:
+            return
+
+        if MineSweeper.IS_FIRST_CLICK:
+            self.insert_mines(clicked_button.number)
+            self.count_mines_in_ceil()
+            self.print_widgets()
+            MineSweeper.IS_FIRST_CLICK = False
+
         if clicked_button.is_mine:
             clicked_button.config(text="*", disabledforeground='black')
             clicked_button.is_open = True
-            MineSweeper._lose_message()
+            MineSweeper.IS_GAME_OVER = True
+            messagebox.showerror(message="You lost!")
+
+            for row in range(1, MineSweeper.ROW + 1):
+                for column in range(1, MineSweeper.COLUMN + 1):
+                    btn = self.buttons[row][column]
+                    if btn.is_mine:
+                        btn.config(text="*")
+
         elif clicked_button.count_mine != 0:
             clicked_button.config(text=clicked_button.count_mine, disabledforeground=colors[clicked_button.count_mine])
             clicked_button.is_open = True
@@ -157,11 +184,11 @@ class MineSweeper:
     def breadth_first_search(self, btn: MyButton, colors):
         """
         It's width search algorithm that opens every button that doesn't have mine. Take nearbiest button
-        that leis on south, west, norths, east to the queue, stops only nearby ceil that have "count of mine"
-        more than 0 and still opens them. Method repeats it until the queue won't be empty.
+        to the queue, stops only nearby ceil that have "count of mine" more than 0 and still opens them.
+        Method repeats it until the queue won't be empty.
         :param btn:
         :param colors:
-        :return:
+        :return: None
         """
         queue = [btn]
         while queue:
@@ -179,12 +206,16 @@ class MineSweeper:
 
                 for dx in [-1, 0, 1]:
                     for dy in [-1, 0, 1]:
-                        if abs(dx-dy) != 1:
-                            continue
 
                         next_btn = self.buttons[x+dx][y+dy]
                         if not next_btn.is_open and 1 <= next_btn.x <= MineSweeper.ROW and 1 <= next_btn.y <= MineSweeper.COLUMN and next_btn not in queue:
                             queue.append(next_btn)
+
+    # def new_game(self):
+    #     self.buttons.clear()
+    #     MineSweeper.IS_FIRST_CLICK = True
+    #     MineSweeper.IS_GAME_OVER = False
+    #     self.start()
 
     def start(self):
         """
@@ -192,9 +223,6 @@ class MineSweeper:
         :return: None
         """
         self.create_widgets()
-        self.insert_mines()
-        self.count_mines_in_ceil()
-        self.print_widgets()
         # self._open_all_buttons()
         MineSweeper.window.mainloop()
 
