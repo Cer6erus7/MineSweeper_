@@ -54,6 +54,8 @@ class MineSweeper:
                 temp.append(btn)
             self.buttons.append(temp)
 
+        self.number_of_buttons = set(range(1, MineSweeper.ROW * MineSweeper.COLUMN + 1))
+
     def create_settings_win(self):
         win_settings = tk.Toplevel(self.window)
         win_settings.wm_title("Settings")
@@ -183,7 +185,8 @@ class MineSweeper:
                                 mines += 1
                 btn.count_mine = mines
 
-    def right_click(self, event):
+    @staticmethod
+    def right_click(event):
         """
         Replace red flags when right button is clicked
         :param event:
@@ -221,7 +224,7 @@ class MineSweeper:
             clicked_button.config(text="*", disabledforeground='black')
             clicked_button.is_open = True
             MineSweeper.IS_GAME_OVER = True
-            messagebox.showerror(message="You lost!")
+            messagebox.showinfo(message="You lost!")
 
             for row in range(1, MineSweeper.ROW + 1):
                 for column in range(1, MineSweeper.COLUMN + 1):
@@ -234,7 +237,12 @@ class MineSweeper:
             clicked_button.is_open = True
         else:
             self.breadth_first_search(clicked_button, colors)
+        self.number_of_buttons.discard(clicked_button.number)
         clicked_button.config(state=tk.DISABLED)
+
+        if len(self.number_of_buttons) == self.MINES:
+            MineSweeper.IS_GAME_OVER = True
+            messagebox.showinfo(message="You won!")
 
     def breadth_first_search(self, btn: MyButton, colors):
         """
@@ -253,6 +261,7 @@ class MineSweeper:
                 cur_btn.config(text=cur_btn.count_mine, disabledforeground=colors[cur_btn.count_mine])
             else:
                 cur_btn.config(text="")
+            self.number_of_buttons.discard(cur_btn.number)
             cur_btn.is_open = True
             cur_btn.config(state=tk.DISABLED)
 
