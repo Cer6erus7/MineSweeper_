@@ -50,6 +50,7 @@ class MineSweeper:
             for j in range(MineSweeper.COLUMN + 2):
                 btn = MyButton(MineSweeper.window, x=i, y=j)
                 btn.config(command=lambda button=btn: self.click(button))
+                btn.bind("<Button-2>", self.right_click)
                 temp.append(btn)
             self.buttons.append(temp)
 
@@ -182,6 +183,21 @@ class MineSweeper:
                                 mines += 1
                 btn.count_mine = mines
 
+    def right_click(self, event):
+        """
+        Replace red flags when right button is clicked
+        :param event:
+        :return:
+        """
+        cur_btn = event.widget
+        if cur_btn["state"] == "normal":
+            cur_btn["text"] = "✓"
+            cur_btn["disabledforeground"] = "red"
+            cur_btn["state"] = "disabled"
+        elif cur_btn["text"] == "✓":
+            cur_btn["text"] = ""
+            cur_btn["state"] = "normal"
+
     def click(self, clicked_button: MyButton):
         """
         It is a logic for the buttons, that they should show when was clicked
@@ -190,7 +206,7 @@ class MineSweeper:
         :param clicked_button:
         :return: None
         """
-        colors = {1: "orange", 2: 'yellow', 3: 'green', 4: 'blue', 5: 'purple', 6: "red", 7: 'pink'}
+        colors = {1: "orange", 2: 'yellow', 3: 'green', 4: 'blue', 5: 'purple', 6: "black", 7: 'pink'}
 
         if MineSweeper.IS_GAME_OVER:
             return
