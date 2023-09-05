@@ -30,6 +30,7 @@ class MineSweeper:
     MINES = 15
     IS_FIRST_CLICK = True
     IS_GAME_OVER = False
+    STOPWATCH_START = False
 
     window = tk.Tk()
     image = tk.PhotoImage(file="img.png")
@@ -43,7 +44,7 @@ class MineSweeper:
         were specified in the static variable: ROW, COLUMN and MINES.
         """
         self.buttons = []
-        MineSweeper.window.geometry(f"{MineSweeper.COLUMN * 50}x{MineSweeper.ROW * 50}+500+100")
+        MineSweeper.window.geometry(f"{MineSweeper.COLUMN * 50}x{MineSweeper.ROW * 50 + 50}+500+100")
 
         for i in range(MineSweeper.ROW + 2):
             temp = []
@@ -53,8 +54,13 @@ class MineSweeper:
                 btn.bind("<Button-2>", self.right_click)
                 temp.append(btn)
             self.buttons.append(temp)
+        self.temp = 0
+        self.amount_of_mines = self.MINES
+        self.after_id = ''
 
         self.number_of_buttons = set(range(1, MineSweeper.ROW * MineSweeper.COLUMN + 1))
+        self.stopwatch = tk.Label(self.window, text="Time: 0", font=("Comic Sans MS", 30))
+        self.mines_label = tk.Label(self.window, text=f"Mines: {self.amount_of_mines}", font=("Comic Sans MS", 30))
 
     def create_settings_win(self):
         win_settings = tk.Toplevel(self.window)
@@ -94,7 +100,7 @@ class MineSweeper:
 
     def create_widgets(self):
         """
-        Arranges buttons and menubar on the window of the game.
+        Arranges buttons, menubar, amount of mines and timer on the window of the game.
         :return: None
         """
 
@@ -120,6 +126,9 @@ class MineSweeper:
 
         for column in range(1, MineSweeper.COLUMN + 1):
             MineSweeper.window.grid_columnconfigure(column, minsize=50)
+
+        self.stopwatch.grid(row=self.ROW + 1, column=self.COLUMN // 5, columnspan=self.COLUMN // 2, stick="w", padx=10)
+        self.mines_label.grid(row=self.ROW + 1, column=round(self.COLUMN * 0.7), columnspan=self.COLUMN // 2, stick="w", padx=10)
 
     def _open_all_buttons(self):
         """
@@ -185,21 +194,40 @@ class MineSweeper:
                                 mines += 1
                 btn.count_mine = mines
 
-    @staticmethod
-    def right_click(event):
+    def right_click(self, event):
         """
         Replace red flags when right button is clicked
         :param event:
         :return:
         """
+
+        if not MineSweeper.STOPWATCH_START:
+            self.tick()
+            MineSweeper.STOPWATCH_START = True
+
         cur_btn = event.widget
-        if cur_btn["state"] == "normal":
-            cur_btn["text"] = "✓"
-            cur_btn["disabledforeground"] = "red"
-            cur_btn["state"] = "disabled"
-        elif cur_btn["text"] == "✓":
-            cur_btn["text"] = ""
-            cur_btn["state"] = "normal"
+        if not MineSweeper.IS_GAME_OVER:
+            if cur_btn["state"] == "normal":
+                cur_btn["text"] = "✓"
+                cur_btn["disabledforeground"] = "red"
+                cur_btn["state"] = "disabled"
+                self.amount_of_mines -= 1
+                self.mines_label.config(text=f"Mines: {self.amount_of_mines}")
+            elif cur_btn["text"] == "✓":
+                cur_btn["text"] = ""
+                cur_btn["state"] = "normal"
+                self.amount_of_mines += 1
+                self.mines_label.config(text=f"Mines: {self.amount_of_mines}")
+
+    def tick(self):
+        """
+        Stopwatch for the game
+        :return:
+        """
+        if not MineSweeper.IS_GAME_OVER:
+            self.after_id = self.window.after(1000, self.tick)
+            self.stopwatch.config(text=f'Time: {self.temp}')
+            self.temp += 1
 
     def click(self, clicked_button: MyButton):
         """
@@ -219,6 +247,10 @@ class MineSweeper:
             self.count_mines_in_ceil()
             self.print_widgets()
             MineSweeper.IS_FIRST_CLICK = False
+
+        if not MineSweeper.STOPWATCH_START:
+            self.tick()
+            MineSweeper.STOPWATCH_START = True
 
         if clicked_button.is_mine:
             clicked_button.config(text="*", disabledforeground='black')
@@ -257,10 +289,15 @@ class MineSweeper:
         while queue:
 
             cur_btn = queue.pop()
+            if cur_btn["text"] == "✓":
+                self.amount_of_mines += 1
+            self.mines_label.config(text=f"Mines: {self.amount_of_mines}")
+
             if cur_btn.count_mine:
                 cur_btn.config(text=cur_btn.count_mine, disabledforeground=colors[cur_btn.count_mine])
             else:
                 cur_btn.config(text="")
+
             self.number_of_buttons.discard(cur_btn.number)
             cur_btn.is_open = True
             cur_btn.config(state=tk.DISABLED)
@@ -283,6 +320,9 @@ class MineSweeper:
         [child.destroy() for child in self.window.winfo_children()]
         MineSweeper.IS_FIRST_CLICK = True
         MineSweeper.IS_GAME_OVER = False
+        MineSweeper.STOPWATCH_START = False
+        if self.after_id:
+            self.window.after_cancel(self.after_id)
         self.__init__()
         self.create_widgets()
 
