@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from random import shuffle
 
 
@@ -63,36 +63,37 @@ class MineSweeper:
         self.mines_label = tk.Label(self.window, text=f"Mines: {self.amount_of_mines}", font=("Comic Sans MS", 30))
 
     def create_settings_win(self):
+        """
+        It is a small menu with the custom settings like ROW, COLUMN, MINE. Used Combobox for it.
+        :return:
+        """
         win_settings = tk.Toplevel(self.window)
         win_settings.wm_title("Settings")
         win_settings.geometry("+635+300")
 
-        row_var = tk.IntVar()
-        column_var = tk.IntVar()
-        mine_var = tk.IntVar()
+        expected_row = tuple(range(8, 16))
+        expected_column = tuple(range(8, 21))
+        expected_mines = tuple(range(0, 61))
 
-        row_entry = tk.Entry(win_settings, textvariable=row_var)
-        row_entry.delete(0, tk.END)
-        row_entry.insert(0, MineSweeper.ROW)
-        row_entry.grid(row=0, column=1, padx=20, pady=10)
+        row_combobox = ttk.Combobox(win_settings, values=expected_row, state="readonly")
+        row_combobox.current(expected_row.index(self.ROW))
+        row_combobox.grid(row=0, column=1, padx=20, pady=10)
         tk.Label(win_settings, text="Row").grid(row=0, column=0)
 
-        column_entry = tk.Entry(win_settings, textvariable=column_var)
-        column_entry.delete(0, tk.END)
-        column_entry.insert(0, MineSweeper.COLUMN)
-        column_entry.grid(row=1, column=1, padx=20, pady=10)
+        column_combobox = ttk.Combobox(win_settings, values=expected_column, state="readonly")
+        column_combobox.current(expected_column.index(self.COLUMN))
+        column_combobox.grid(row=1, column=1, padx=20, pady=10)
         tk.Label(win_settings, text="Column").grid(row=1, column=0)
 
-        mine_entry = tk.Entry(win_settings, textvariable=mine_var)
-        mine_entry.delete(0, tk.END)
-        mine_entry.insert(0, MineSweeper.MINES)
-        mine_entry.grid(row=2, column=1, padx=20, pady=10)
+        mine_combobox = ttk.Combobox(win_settings, values=expected_mines, state="readonly")
+        mine_combobox.current(expected_mines.index(self.MINES))
+        mine_combobox.grid(row=2, column=1, padx=20, pady=10)
         tk.Label(win_settings, text="Mine").grid(row=2, column=0)
 
         def ok_button():
-            MineSweeper.ROW = int(row_var.get())
-            MineSweeper.COLUMN = int(column_var.get())
-            MineSweeper.MINES = int(mine_var.get())
+            MineSweeper.ROW = int(row_combobox.get())
+            MineSweeper.COLUMN = int(column_combobox.get())
+            MineSweeper.MINES = int(mine_combobox.get())
             self.new_game()
 
         ok_btn = tk.Button(win_settings, text="OK", command=ok_button)
