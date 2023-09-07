@@ -275,6 +275,13 @@ class MineSweeper:
 
         if len(self.number_of_buttons) == self.MINES:
             MineSweeper.IS_GAME_OVER = True
+
+            for row in range(1, MineSweeper.ROW + 1):
+                for column in range(1, MineSweeper.COLUMN + 1):
+                    btn = self.buttons[row][column]
+                    if btn.is_mine:
+                        btn.config(text="*")
+
             messagebox.showinfo(message="You won!")
 
     def breadth_first_search(self, btn: MyButton, colors):
